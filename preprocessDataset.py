@@ -50,4 +50,9 @@ print(df.dtypes)
 
 print(df.loc[df["missing"] > 20, :].sample(10))
 
+#columns with the most missing values
+missing_values = df.isnull().sum().sort_values(ascending=False).loc[lambda x: x>0]
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+    print(missing_values)
+
 df.to_csv('application_data_preprocessed.csv', index=False)
