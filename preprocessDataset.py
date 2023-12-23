@@ -5,6 +5,10 @@ df = pd.read_csv('application_data.csv')
 print(df.shape)
 print(df.head())
 
+#dropping flag_document
+to_drop = [i for i in df.columns.tolist() if i.startswith('FLAG_DOCUMENT')]
+df = df.drop(to_drop, axis=1)
+
 def listMissingColumns(df):
     missingColumns = []
     for column in df.columns:
