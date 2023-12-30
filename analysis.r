@@ -28,11 +28,11 @@ funcs <- list(
   function(x) x^2, 
   function(x) x,
   function(x) x^3,
-  function(x) 1/x,
-  function(x) 1/(x^2),
+  function(x) 1/(x+1),
+  function(x) 1/(x^2 + 1),
   function(x) x^(1/3)
 )
-fnames <- c("log+1", "exp", "sqrt", "x^2", "identity", "x^3", "1/x", "1/x^2", "x^(1/3)")
+fnames <- c("log", "exp", "sqrt", "squared", "identity", "cubed", "inverse", "inverse_squared", "cubic_root")
 
 # Apply transformations to each column in the dataset
 transformed_data <- lapply(names(data), function(col) {
