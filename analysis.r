@@ -30,7 +30,7 @@ funcs <- list(
   function(x) x^3,
   function(x) 1/x,
   function(x) 1/(x^2),
-  function(x) x^(1/3),
+  function(x) x^(1/3)
 )
 fnames <- c("log+1", "exp", "sqrt", "x^2", "identity", "x^3", "1/x", "1/x^2", "x^(1/3)")
 
