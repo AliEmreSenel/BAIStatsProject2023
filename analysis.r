@@ -22,9 +22,13 @@ for (feature_name in categorical_features) {
 #GENERATE DIFFERENT TRANSFORMATIONS FOR CONT VARS
 # List of transformation functions
 funcs <- list(
-  log, exp, sqrt, function(x) x^2, function(x) x
+  function(x) log(x),
+  function(x) log(x + 1),
+  exp, sqrt, 
+  function(x) x^2, 
+  function(x) x
 )
-fnames <- c("log", "exp", "sqrt", "x^2", "identity")
+fnames <- c("log", "log+1", "exp", "sqrt", "x^2", "identity")
 
 # Apply transformations to each column in the dataset
 transformed_data <- lapply(names(data), function(col) {
