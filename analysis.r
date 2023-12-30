@@ -100,3 +100,40 @@ qqnorm(log(data$AMT_INCOME_TOTAL))
 qqline(log(data$AMT_INCOME_TOTAL))
 
 
+#STEP-UP PROCEDURE FOR MODEL SELECTION:
+step_up <- function(data) {
+  important_features <- c()
+  iteration_number = 0
+  remaining_features <- setdiff(names(data), "AMT_INCOME_TOTAL")
+  while (TRUE) {
+    #print(important_features)
+    iteration_number = iteration_number + 1
+    print(iteration_number)
+    min_p = 1
+    feature_argmin <- NULL
+    for (feature in remaining_features) {
+      lm = lm(log(AMT_INCOME_TOTAL) ~ ., data=data[union(feature, important_features)])
+      if (feature %in% categorical_features) {
+        temp = names(summary(lm)$coefficients[,4])
+        p_value = min(summary(lm)$coefficients[,4][temp[startsWith(temp, feature)]])
+      }
+      else {
+        p_value = summary(lm)$coefficients[,4][feature]
+      }
+      #print(feature)
+      #print(p_value)
+      if (p_value < min_p) {
+        min_p = p_value
+        feature_argmin = feature
+      }
+    }
+    print(feature_argmin)
+    if (min_p < 0.05) {
+      important_features <- union(important_features, feature_argmin)
+    } else {
+      break
+    }
+    remaining_features <- setdiff(remaining_features, feature_argmin)
+  }
+  return(important_features)
+}
