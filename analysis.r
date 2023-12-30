@@ -19,6 +19,35 @@ for (feature_name in categorical_features) {
   data[[feature_name]] <- factor(data[[feature_name]])
 }
 
+#GENERATE DIFFERENT TRANSFORMATIONS FOR CONT VARS
+# List of transformation functions
+funcs <- list(
+  log, exp, sqrt, function(x) x^2, function(x) x
+)
+fnames <- c("log", "exp", "sqrt", "x^2", "identity")
+
+# Apply transformations to each column in the dataset
+transformed_data <- lapply(names(data), function(col) {
+  col_data <- data[[col]]
+  if (col != "AMT_INCOME_TOTAL" && !is.factor(col_data)) {
+    lapply(funcs, function(f) f(col_data))
+  } else {
+    list(col_data)  # Skip transformations for AMT_INCOME_TOTAL or if it's a factor, return as a list
+  }
+})
+
+# Naming the new columns and creating a new dataframe
+transformed_data_df <- as.data.frame(transformed_data)
+names(transformed_data_df) <- unlist(lapply(names(data), function(col) {
+  col_data <- data[[col]]
+  if (col != "AMT_INCOME_TOTAL" && !is.factor(col_data)) {
+    paste(rep(col, each = length(fnames)), fnames, sep = "_")
+  } else {
+    col  # Skip naming transformations for AMT_INCOME_TOTAL or if it's a factor, keep its original name
+  }
+}))
+
+transformed_data_df
 
 #STARTING ANALYSIS:
 big_lm = lm(AMT_INCOME_TOTAL ~ ., data=data)
@@ -61,44 +90,5 @@ plot(ln_big_lm$residuals)
 
 qqnorm(log(data$AMT_INCOME_TOTAL))
 qqline(log(data$AMT_INCOME_TOTAL))
-
-
-#Creating function for taking transformation of data:
-transformation <- function(data, transformation_type) {
-  if (transformation_type == "log") {
-    return(log(data))
-  } else if (transformation_type == "sqrt") {
-    return(sqrt(data))
-  } else if (transformation_type == "exp") {
-    return(exp(data))
-  } else if (transformation_type == "inverse") {
-    return(1/data)
-  } else {
-    return(data)
-  }
-} 
-
-transformation <- function(data, columns) {
-  library(glue)
-  for (column in columns) {
-    #log
-    data[["temp"]] <- log(data[[column]])
-    names(data)[names(data) == "temp"] <- glue("{column}_ln")
-    #sqrt
-    data[["temp"]] <- sqrt(data[[column]])
-    names(data)[names(data) == "temp"] <- glue("{column}_sqrt")
-    
-  }
-  return(data)
-}
-
-test = "AMT_INCOME_TOTAL"
-sprintf("%s_ln", test)
-
-vec = log(data$AMT_INCOME_TOTAL)
-funcs <- list(
-  log, exp, sqrt, function(x) x^2, function(x) x
-)
-print(lapply(funcs, function(f) f(vec)))
 
 
