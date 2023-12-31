@@ -137,3 +137,38 @@ step_up <- function(data) {
   }
   return(important_features)
 }
+
+
+
+
+#Features we chose:
+test <- c(
+  "MONTHS_EMPLOYED_exp",
+  "REGION_RATING_CLIENT_W_CITY",
+  "CODE_GENDER",
+  "EXT_SOURCE_1_exp",
+  "NAME_INCOME_TYPE",
+  "OWN_CAR_AGE_log",
+  "OCCUPATION_TYPE",
+  "FLOORSMAX_AVG_inverse_squared",
+  "EXT_SOURCE_3_exp",
+  "REGION_RATING_CLIENT",
+  "YEARS_BIRTH_inverse_squared",
+  "NAME_FAMILY_STATUS",
+  "MONTHS_EMPLOYED_log",
+  "REGION_POPULATION_RELATIVE_cubed",
+  "REGION_POPULATION_RELATIVE_cubic_root",
+  "EXT_SOURCE_2_inverse",
+  "REGION_POPULATION_RELATIVE_sqrt",
+  "CNT_FAM_MEMBERS",
+  "OWN_CAR_AGE_cubic_root",
+  "OWN_CAR_AGE_inverse_squared",
+  "ORGANIZATION_TYPE",
+  "NAME_EDUCATION_TYPE",
+  "FLOORSMIN_MEDI_exp",
+  "CNT_CHILDREN",
+  "NONLIVINGAREA_MODE_exp",
+  "YEARS_BUILD_MODE_cubic_root",
+  "YEARS_BUILD_MEDI_cubed",
+  "MONTHS_EMPLOYED_identity"
+)
