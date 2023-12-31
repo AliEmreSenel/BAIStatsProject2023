@@ -70,9 +70,7 @@ big_lm_p_values <- summary(big_lm)$coefficients[,4][summary(big_lm)$coefficients
 
 plot(data$CODE_GENDER, data$AMT_INCOME_TOTAL)
 plot(data$AMT_INCOME_TOTAL)
-hist(log(data$AMT_INCOME_TOTAL))
-
-# Predicting the log of the income increases the R^2
+hist(log(data$AMT_INCOME_TOTAL))# Predicting the log of the income increases the R^2
 ln_big_lm = lm(log(AMT_INCOME_TOTAL) ~ ., data=data)
 summary(ln_big_lm)
 qqnorm(residuals(ln_big_lm))
@@ -173,8 +171,7 @@ test <- c(
   "MONTHS_EMPLOYED_identity"
 )
 
-
-
+detach()
 #### USING THE FULL ALLOWABLE DATASET AT OUR DISPOSAL TO RUN THE LM:
 total_data <- read.table("application_data_with_important_features.csv", header=TRUE, sep=",")
 attach(total_data)
@@ -184,6 +181,8 @@ for (feature_name in names(total_data)) {
     total_data[[feature_name]] <- factor(total_data[[feature_name]])
   }
 }
+
+#transformed_data_df <- c()
 #Adding transformation:
 transformed_data <- lapply(names(total_data), function(col) {
   col_data <- total_data[[col]]
@@ -195,7 +194,7 @@ transformed_data <- lapply(names(total_data), function(col) {
 })
 
 transformed_data_df <- as.data.frame(transformed_data)
-names(transformed_data_df) <- unlist(lapply(names(transformed_data), function(col) {
+names(transformed_data_df) <- unlist(lapply(names(total_data), function(col) {
   col_data <- total_data[[col]]
   if (col != "AMT_INCOME_TOTAL" && !is.factor(col_data)) {
     paste(rep(col, each = length(fnames)), fnames, sep = "_")
@@ -204,7 +203,9 @@ names(transformed_data_df) <- unlist(lapply(names(transformed_data), function(co
   }
 }))
 
-lm_test <- lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data_df[test])
+transformed_data_df[test]
+
+lm_test = lm(log(AMT_INCOME_TOTAL) ~ ., transformed_data_df[test])
 summary(lm_test)
 
 
@@ -218,4 +219,38 @@ normalize_dataset <- function(dataset) {
     }
   }
   return(normalized_dataset)
+}
+
+normalized_dataset <- normalize_dataset(transformed_data_df[test])
+
+library(modelr)
+library(purrr)
+library(tidyverse)
+library(plyr)
+
+
+get_pred  <- function(model, test_data){
+  data  <- as.data.frame(test_data)
+  pred  <- add_predictions(data, model)
+  return(pred)
+}
+
+summary(lm(log(AMT_INCOME_TOTAL) ~ ., data=normalized_dataset, na.action=na.omit))
+summary(lm(AMT_INCOME_TOTAL ~ ., data=normalized_dataset, na.action=na.omit))
+
+for (k in 2:10) {
+  print(k)
+cv  <- crossv_kfold(normalized_dataset, k = 3)
+models1 <- map(cv$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=normalized_dataset, na.action=na.omit))
+models2 <- map(cv$train, ~lm(AMT_INCOME_TOTAL ~ ., data=normalized_dataset, na.action=na.omit))
+pred1  <- map2_df(models1, cv$test, get_pred, .id = "Run")
+pred2  <- map2_df(models2, cv$test, get_pred, .id = "Run")
+
+MSE1  <- pred1 %>% group_by(Run) %>%
+  summarise(MSE = mean( (log(AMT_INCOME_TOTAL) - pred)^2))
+print(MSE1)
+
+MSE2  <- pred2 %>% group_by(Run) %>%
+  summarise(MSE = mean( (log(AMT_INCOME_TOTAL) - pred)^2))
+print(MSE2)
 }
