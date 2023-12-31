@@ -172,3 +172,37 @@ test <- c(
   "YEARS_BUILD_MEDI_cubed",
   "MONTHS_EMPLOYED_identity"
 )
+
+
+
+#### USING THE FULL ALLOWABLE DATASET AT OUR DISPOSAL TO RUN THE LM:
+total_data <- read.table("application_data_with_important_features.csv", header=TRUE, sep=",")
+attach(total_data)
+names(total_data)
+for (feature_name in names(total_data)) {
+  if (feature_name %in% categorical_features) {
+    total_data[[feature_name]] <- factor(total_data[[feature_name]])
+  }
+}
+#Adding transformation:
+transformed_data <- lapply(names(total_data), function(col) {
+  col_data <- total_data[[col]]
+  if (col != "AMT_INCOME_TOTAL" && !is.factor(col_data)) {
+    lapply(funcs, function(f) f(col_data))
+  } else {
+    list(col_data)  # Skip transformations for AMT_INCOME_TOTAL or if it's a factor, return as a list
+  }
+})
+
+transformed_data_df <- as.data.frame(transformed_data)
+names(transformed_data_df) <- unlist(lapply(names(transformed_data), function(col) {
+  col_data <- total_data[[col]]
+  if (col != "AMT_INCOME_TOTAL" && !is.factor(col_data)) {
+    paste(rep(col, each = length(fnames)), fnames, sep = "_")
+  } else {
+    col  # Skip naming transformations for AMT_INCOME_TOTAL or if it's a factor, keep its original name
+  }
+}))
+
+lm_test <- lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data_df[test])
+summary(lm_test)
