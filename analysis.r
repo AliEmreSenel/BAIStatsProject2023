@@ -206,3 +206,16 @@ names(transformed_data_df) <- unlist(lapply(names(transformed_data), function(co
 
 lm_test <- lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data_df[test])
 summary(lm_test)
+
+
+    
+#### NORMALIZING FUNCTION:
+normalize_dataset <- function(dataset) {
+  normalized_dataset <- dataset
+  for (feature_name in names(dataset)) {
+    if (feature_name %in% setdiff(names(dataset), categorical_features)) {
+      normalized_dataset[[feature_name]] <- (dataset[[feature_name]] - mean(dataset[[feature_name]]))/sd(dataset[[feature_name]])
+    }
+  }
+  return(normalized_dataset)
+}
