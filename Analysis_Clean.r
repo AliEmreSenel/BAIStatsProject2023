@@ -54,25 +54,28 @@ transformations <- function(dataset) {
 transformed_data <- transformations(dataset)
 
 
-# Normalize dataset:
-normalize_dataset <- function(dataset) {
-  normalized_dataset <- dataset
+# Standardize dataset:
+standardize_dataset <- function(dataset) {
+  standardized_dataset <- dataset
   categorical_features = c("CODE_GENDER", "FLAG_OWN_REALTY", "CNT_CHILDREN", "NAME_INCOME_TYPE", "NAME_EDUCATION_TYPE", "NAME_FAMILY_STATUS", "NAME_HOUSING_TYPE", "CNT_FAM_MEMBERS", "REGION_RATING_CLIENT", "REGION_RATING_CLIENT_W_CITY", "ORGANIZATION_TYPE", "OCCUPATION_TYPE", "FONDKAPREMONT_MODE", "HOUSETYPE_MODE", "WALLSMATERIAL_MODE", "EMERGENCYSTATE_MODE")
   for (feature_name in names(dataset)) {
     if (feature_name %in% setdiff(names(dataset), union(categorical_features, "AMT_INCOME_TOTAL"))) {
-      normalized_dataset[[feature_name]] <- (dataset[[feature_name]] - mean(dataset[[feature_name]]))/sd(dataset[[feature_name]])
+      standardized_dataset[[feature_name]] <- (dataset[[feature_name]] - mean(dataset[[feature_name]]))/sd(dataset[[feature_name]])
     }
   }
-  return(normalized_dataset)
+  return(standardized_dataset)
 }
-normalized_data <- normalize_dataset(transformed_data)
+standardized_data <- standardize_dataset(transformed_data)
 
 
 # Starting Linear model:
-original_lm = lm(dataset$AMT_INCOME_TOTAL ~ ., data = normalized_data)
+original_lm = lm(dataset$AMT_INCOME_TOTAL ~ ., data = standardized_data)
 summary(original_lm) # R^2 adjusted = 0.2737
 plot(dataset$AMT_INCOME_TOTAL, original_lm$residuals)
 
+original_log_lm = lm(log(standardized_data$AMT_INCOME_TOTAL) ~ ., data = standardized_data)
+summary(original_log_lm) # R^2 adjusted = 0.3337
+plot(log(standardized_data$AMT_INCOME_TOTAL), original_log_lm$residuals)
 
 # MODEL SELECTION:
 
@@ -114,7 +117,7 @@ step_up <- function(dataset) {
   }
   return(important_features)
 }
-step_up_model_1 <- step_up(normalized_data)
+step_up_model_1 <- step_up(standardized_data)
 
 step_up_model_1 <- c("REGION_RATING_CLIENT_W_CITY",
                     "CODE_GENDER",
@@ -143,14 +146,9 @@ step_up_model_1 <- c("REGION_RATING_CLIENT_W_CITY",
                     "YEARS_BUILD_MODE_cubic_root",
                     "YEARS_BUILD_MEDI_cubed")
 
-        # Using transformed_data
-step_up_model_1_lm_1 <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=transformed_data[step_up_model_1])
-summary(step_up_model_1_lm_1)
-plot(log(transformed_data$AMT_INCOME_TOTAL), step_up_model_1_lm_1$residuals)
-
-        # Using normalized_data
-step_up_model_1_lm_2 <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=normalized_data[step_up_model_1])
-summary(step_up_model_1_lm_2)
+        # Using standardized_data
+step_up_model_1_lm <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_up_model_1], na.action=na.omit)
+summary(step_up_model_1_lm)
 
 
 # STEP DOWN SELECTION:
@@ -183,7 +181,7 @@ step_down <- function(dataset) {
   }
   return(important_features)
 }
-step_down_model_1 <- step_down(normalized_data)
+step_down_model_1 <- step_down(standardized_data)
 
 step_down_model_1 <- c(
   "CODE_GENDER",
@@ -289,8 +287,8 @@ step_down_model_1_lm_1 <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=tr
 summary(step_down_model_1_lm_1)
 plot(log(transformed_data$AMT_INCOME_TOTAL), step_down_model_1_lm_1$residuals)
 
-        # Using normalized_data
-step_down_model_1_lm_2 <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=normalized_data[step_down_model_1])
+        # Using standardized_data
+step_down_model_1_lm_2 <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_down_model_1])
 summary(step_down_model_1_lm_2)
 
 
@@ -318,8 +316,8 @@ full.model <- lm(formula = log(transformed_data$AMT_INCOME_TOTAL) ~ CODE_GENDER 
     TOTALAREA_MODE_exp + TOTALAREA_MODE_squared + TOTALAREA_MODE_identity +
     TOTALAREA_MODE_cubed + TOTALAREA_MODE_inverse + YEARS_BIRTH_log +
     YEARS_BIRTH_cubic_root + YEARS_EMPLOYED_sqrt + YEARS_EMPLOYED_identity,
-    data = normalized_data[step_down_model_1])
-step.model <- stepAIC(full.model, direction = c("backward"), trace = TRUE, k = log(nrow(normalized_data))^2)
+    data = standardized_data[step_down_model_1])
+step.model <- stepAIC(full.model, direction = c("backward"), trace = TRUE, k = log(nrow(standardized_data))^2)
 length(summary(step.model)$coefficients)
 summary(step.model)
 
@@ -345,7 +343,7 @@ summary(step.model)
 #    TOTALAREA_MODE_exp + TOTALAREA_MODE_squared + TOTALAREA_MODE_identity +
 #    TOTALAREA_MODE_cubed + TOTALAREA_MODE_inverse + YEARS_BIRTH_log +
 #    YEARS_BIRTH_cubic_root + YEARS_EMPLOYED_sqrt + YEARS_EMPLOYED_identity,
-#    data = normalized_data[step_down_model_1])
+#    data = standardized_data[step_down_model_1])
 
 # SECOND RESULT USING BIC (WITH THE PENALTY SQUARED):
 #lm(formula = log(transformed_data$AMT_INCOME_TOTAL) ~ CODE_GENDER +
@@ -369,31 +367,26 @@ summary(step.model)
 #    TOTALAREA_MODE_exp + TOTALAREA_MODE_squared + TOTALAREA_MODE_identity +
 #    TOTALAREA_MODE_cubed + TOTALAREA_MODE_inverse + YEARS_BIRTH_log +
 #    YEARS_BIRTH_cubic_root + YEARS_EMPLOYED_sqrt + YEARS_EMPLOYED_identity,
-#    data = normalized_data[step_down_model_1])
+#    data = standardized_data[step_down_model_1])
 
 
 # DIVISION OF DATASET INTO 4 INCOME LEVELS:
-cut_offs <- quantile(log(normalized_data$AMT_INCOME_TOTAL), prob=c(.25,.5,.75), type=1)
-normalized_data$GROUPING <- cut(log(transformed_data$AMT_INCOME_TOTAL), breaks=c(-Inf, cut_offs, Inf), labels=c("1", "2", "3", "4"), include.lowest=TRUE)
+cut_offs <- quantile(log(standardized_data$AMT_INCOME_TOTAL), prob=c(.25,.5,.75), type=1)
+standardized_data$GROUPING <- cut(log(transformed_data$AMT_INCOME_TOTAL), breaks=c(-Inf, cut_offs, Inf), labels=c("1", "2", "3", "4"), include.lowest=TRUE)
 
 for (i in 1:4) {
-  test <- normalized_data[normalized_data$GROUPING == i,]
+  test <- standardized_data[standardized_data$GROUPING == i,]
   test$GROUPING <- NULL
   lm = lm(log(test$AMT_INCOME_TOTAL) ~ ., data = test)
   cat(sprintf("For group: %i, R^2: %.2f, R^2 adjusted: %.2f", i, summary(lm)$r.squared, summary(lm)$adj.r.squared))
   print("\n")
 }
 
-test <- normalized_data[normalized_data$GROUPING == 3,]
+test <- standardized_data[standardized_data$GROUPING == 3,]
 test$GROUPING <- NULL
 lm = lm(log(test$AMT_INCOME_TOTAL) ~ ., data = test)
 summary(lm)
 
 
 # HYPOTHESIS TESTING, DOES GENDER AND JOB TYPE AFFECT TOTAL INCOME? (ANOVA TIME)
-test <- normalized_data[normalized_data$AMT_INCOME_TOTAL < 500000,]
-plot(test$CODE_GENDER, test$AMT_INCOME_TOTAL)
 
-par(mfrow=c(2,1))
-hist(normalized_data$AMT_INCOME_TOTAL[normalized_data$CODE_GENDER == "M"])
-hist(normalized_data$AMT_INCOME_TOTAL[normalized_data$CODE_GENDER == "F"])
