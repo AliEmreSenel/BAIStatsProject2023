@@ -59,7 +59,7 @@ normalize_dataset <- function(dataset) {
   normalized_dataset <- dataset
   categorical_features = c("CODE_GENDER", "FLAG_OWN_REALTY", "CNT_CHILDREN", "NAME_INCOME_TYPE", "NAME_EDUCATION_TYPE", "NAME_FAMILY_STATUS", "NAME_HOUSING_TYPE", "CNT_FAM_MEMBERS", "REGION_RATING_CLIENT", "REGION_RATING_CLIENT_W_CITY", "ORGANIZATION_TYPE", "OCCUPATION_TYPE", "FONDKAPREMONT_MODE", "HOUSETYPE_MODE", "WALLSMATERIAL_MODE", "EMERGENCYSTATE_MODE")
   for (feature_name in names(dataset)) {
-    if (feature_name %in% setdiff(names(dataset), categorical_features)) {
+    if (feature_name %in% setdiff(names(dataset), union(categorical_features, "AMT_INCOME_TOTAL"))) {
       normalized_dataset[[feature_name]] <- (dataset[[feature_name]] - mean(dataset[[feature_name]]))/sd(dataset[[feature_name]])
     }
   }
@@ -370,3 +370,30 @@ summary(step.model)
 #    TOTALAREA_MODE_cubed + TOTALAREA_MODE_inverse + YEARS_BIRTH_log +
 #    YEARS_BIRTH_cubic_root + YEARS_EMPLOYED_sqrt + YEARS_EMPLOYED_identity,
 #    data = normalized_data[step_down_model_1])
+
+
+# DIVISION OF DATASET INTO 4 INCOME LEVELS:
+cut_offs <- quantile(log(normalized_data$AMT_INCOME_TOTAL), prob=c(.25,.5,.75), type=1)
+normalized_data$GROUPING <- cut(log(transformed_data$AMT_INCOME_TOTAL), breaks=c(-Inf, cut_offs, Inf), labels=c("1", "2", "3", "4"), include.lowest=TRUE)
+
+for (i in 1:4) {
+  test <- normalized_data[normalized_data$GROUPING == i,]
+  test$GROUPING <- NULL
+  lm = lm(log(test$AMT_INCOME_TOTAL) ~ ., data = test)
+  cat(sprintf("For group: %i, R^2: %.2f, R^2 adjusted: %.2f", i, summary(lm)$r.squared, summary(lm)$adj.r.squared))
+  print("\n")
+}
+
+test <- normalized_data[normalized_data$GROUPING == 3,]
+test$GROUPING <- NULL
+lm = lm(log(test$AMT_INCOME_TOTAL) ~ ., data = test)
+summary(lm)
+
+
+# HYPOTHESIS TESTING, DOES GENDER AND JOB TYPE AFFECT TOTAL INCOME? (ANOVA TIME)
+test <- normalized_data[normalized_data$AMT_INCOME_TOTAL < 500000,]
+plot(test$CODE_GENDER, test$AMT_INCOME_TOTAL)
+
+par(mfrow=c(2,1))
+hist(normalized_data$AMT_INCOME_TOTAL[normalized_data$CODE_GENDER == "M"])
+hist(normalized_data$AMT_INCOME_TOTAL[normalized_data$CODE_GENDER == "F"])
