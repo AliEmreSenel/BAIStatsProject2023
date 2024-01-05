@@ -389,4 +389,134 @@ summary(lm)
 
 
 # HYPOTHESIS TESTING, DOES GENDER AND JOB TYPE AFFECT TOTAL INCOME? (ANOVA TIME)
+res_aov <- aov(AMT_INCOME_TOTAL ~ CODE_GENDER + OCCUPATION_TYPE + CODE_GENDER:OCCUPATION_TYPE, data = standardized_data)
+summary(res_aov)
+
+# MODEL TRAINING & CROSS VALIDATION
+library(modelr)
+library(purrr)
+library(tidyverse)
+library(plyr)
+
+
+get_pred  <- function(model, test_data){
+  data  <- as.data.frame(test_data)
+  pred  <- add_predictions(data, model)
+  return(pred)
+}
+
+calc_MSE <- function(pred, target){
+  MSE  <- pred %>% group_by(Run) %>%
+    summarise(MSE = mean( (target - pred)^2))
+  return(MSE / mean(target))
+}
+
+calc_standardized_MSE <- function(pred, target){
+  return(calc_MSE(pred, target) / mean(target))
+}
+
+for (k in 2:10) {
+  print(k)
+  
+  cv_step_down  <- crossv_kfold(transformed_data[step_down_model_1], k = k)
+  cv_step_up <- crossv_kfold(transformed_data[step_up_model_1], k = k)
+  cv_all  <- crossv_kfold(transformed_data, k = k)
+  
+  cv_standardized_step_down  <- crossv_kfold(standardized_data[step_down_model_1], k = k)
+  cv_standardized_step_up  <- crossv_kfold(standardized_data[step_up_model_1], k = k)
+  cv_standardized_all  <- crossv_kfold(standardized_data, k = k)
+
+  
+#  model_step_down <- map(cv_step_down$train, ~lm(AMT_INCOME_TOTAL ~ ., data=transformed_data[step_down_model_1]))
+#  model_step_up <- map(cv_step_up$train, ~lm(AMT_INCOME_TOTAL ~ ., data=transformed_data[step_up_model_1]))
+#  model_all <- map(cv_all$train, ~lm(AMT_INCOME_TOTAL ~ ., data=transformed_data))
+  model_step_down_log <- map(cv_step_down$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data[step_down_model_1]))
+  model_step_up_log <- map(cv_step_up$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data[step_up_model_1]))
+  model_all_log <- map(cv_all$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data))
+  
+#  model_standardized_step_down <- map(cv_standardized_step_down$train, ~lm(AMT_INCOME_TOTAL ~ ., data=standardized_data[step_down_model_1]))
+#  model_standardized_step_up <- map(cv_standardized_step_up$train, ~lm(AMT_INCOME_TOTAL ~ ., data=standardized_data[step_up_model_1]))
+#  model_standardized_all <- map(cv_standardized_all$train, ~lm(AMT_INCOME_TOTAL ~ ., data=standardized_data))
+  model_standardized_step_down_log <- map(cv_standardized_step_down$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_down_model_1]))
+  model_standardized_step_up_log <- map(cv_standardized_step_up$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_up_model_1]))
+  model_standardized_all_log <- map(cv_standardized_all$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data))
+  
+  
+#  pred_step_down  <- map2_df(model_step_down, cv_step_down$test, get_pred, .id = "Run")
+#  pred_step_up  <- map2_df(model_step_up, cv_step_up$test, get_pred, .id = "Run")
+#  pred_all  <- map2_df(model_all, cv_all$test, get_pred, .id = "Run")
+  pred_step_down_log  <- map2_df(model_step_down_log, cv_step_down$test, get_pred, .id = "Run")
+  pred_step_up_log  <- map2_df(model_step_up_log, cv_step_up$test, get_pred, .id = "Run")
+  pred_all_log  <- map2_df(model_all_log, cv_all$test, get_pred, .id = "Run")
+  
+#  pred_standardized_step_down  <- map2_df(model_standardized_step_down, cv_standardized_step_down$test, get_pred, .id = "Run")
+#  pred_standardized_step_up  <- map2_df(model_standardized_step_up, cv_standardized_step_up$test, get_pred, .id = "Run")
+#  pred_standardized_all  <- map2_df(model_standardized_all, cv_standardized_all$test, get_pred, .id = "Run")
+  pred_standardized_step_down_log  <- map2_df(model_standardized_step_down_log, cv_standardized_step_down$test, get_pred, .id = "Run")
+  pred_standardized_step_up_log  <- map2_df(model_standardized_step_up_log, cv_standardized_step_up$test, get_pred, .id = "Run")
+  pred_standardized_all_log  <- map2_df(model_standardized_all_log, cv_standardized_all$test, get_pred, .id = "Run")
+  
+  
+#  print(calc_MSE(pred_step_down, AMT_INCOME_TOTAL))
+#  print(calc_standardized_MSE(pred_step_down, AMT_INCOME_TOTAL))
+#  print(calc_MSE(pred_step_up, AMT_INCOME_TOTAL))
+#  print(calc_standardized_MSE(pred_step_up, AMT_INCOME_TOTAL))
+#  print(calc_MSE(pred_all, AMT_INCOME_TOTAL))
+#  print(calc_standardized_MSE(pred_all, AMT_INCOME_TOTAL))
+#  print(calc_MSE(pred_step_down_log, log(AMT_INCOME_TOTAL)))
+  print(calc_standardized_MSE(pred_step_down_log, log(AMT_INCOME_TOTAL)))
+#  print(calc_MSE(pred_step_up_log, log(AMT_INCOME_TOTAL)))
+  print(calc_standardized_MSE(pred_step_up_log, log(AMT_INCOME_TOTAL)))
+#  print(calc_MSE(pred_all_log, log(AMT_INCOME_TOTAL)))
+  print(calc_standardized_MSE(pred_all_log, log(AMT_INCOME_TOTAL)))
+  
+#  print(calc_MSE(pred_standardized_step_down, AMT_INCOME_TOTAL))
+#  print(calc_standardized_MSE(pred_standardized_step_down, AMT_INCOME_TOTAL))
+#  print(calc_MSE(pred_standardized_step_up, AMT_INCOME_TOTAL))
+#  print(calc_standardized_MSE(pred_standardized_step_up, AMT_INCOME_TOTAL))
+#  print(calc_MSE(pred_standardized_all, AMT_INCOME_TOTAL))
+#  print(calc_standardized_MSE(pred_standardized_all, AMT_INCOME_TOTAL))
+#  print(calc_MSE(pred_standardized_step_down_log, log(AMT_INCOME_TOTAL)))
+  print(calc_standardized_MSE(pred_standardized_step_down_log, log(AMT_INCOME_TOTAL)))
+#  print(calc_MSE(pred_standardized_step_up_log, log(AMT_INCOME_TOTAL)))
+  print(calc_standardized_MSE(pred_standardized_step_up_log, log(AMT_INCOME_TOTAL)))
+#  print(calc_MSE(pred_standardized_all_log, log(AMT_INCOME_TOTAL)))
+  print(calc_standardized_MSE(pred_standardized_all_log, log(AMT_INCOME_TOTAL)))
+}
+
+# LASSO Model
+library(glmnet)
+
+x = data.matrix(standardized_data[,!names(standardized_data) %in% c("AMT_INCOME_TOTAL")])
+y = log(standardized_data$AMT_INCOME_TOTAL)
+
+cv_model <- cv.glmnet(x, y, alpha=1)
+
+best_lambda <- cv_model$lambda.min
+best_lambda
+
+#produce plot of test MSE by lambda value
+plot(cv_model) 
+
+best_model <- glmnet(x, y, alpha = 1, lambda = best_lambda )
+best_coef <- coef(best_model)
+best_coef
+
+#use fitted best model to make predictions
+y_predicted <- predict(best_model, s = best_lambda, newx = x)
+
+#find SST and SSE
+sst <- sum((y - mean(y))^2)
+sse <- sum((y_predicted - y)^2)
+
+#find R-Squared
+rsq <- 1 - sse/sst
+rsq
+
+# Calculate adjusted R^2
+n <- length(y)  # Number of observations
+k <- sum(best_coef != 0)  # Number of predictors with non-zero coefficients
+
+adjusted_rsq <- 1 - ((1 - rsq) * (n - 1)) / (n - k - 1)
+adjusted_rsq
 

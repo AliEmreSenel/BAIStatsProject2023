@@ -221,7 +221,7 @@ normalize_dataset <- function(dataset) {
   return(normalized_dataset)
 }
 
-normalized_dataset <- normalize_dataset(transformed_data_df[test])
+normalized_dataset <- normalize_dataset(transformed_data_df)
 
 library(modelr)
 library(purrr)
@@ -235,22 +235,91 @@ get_pred  <- function(model, test_data){
   return(pred)
 }
 
-summary(lm(log(AMT_INCOME_TOTAL) ~ ., data=normalized_dataset, na.action=na.omit))
-summary(lm(AMT_INCOME_TOTAL ~ ., data=normalized_dataset, na.action=na.omit))
+summary(lm(log(AMT_INCOME_TOTAL) ~ ., data=normalized_dataset[test], na.action=na.omit))
+summary(lm(AMT_INCOME_TOTAL ~ ., data=normalized_dataset[test], na.action=na.omit))
 
 for (k in 2:10) {
   print(k)
-cv  <- crossv_kfold(normalized_dataset, k = 3)
-models1 <- map(cv$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=normalized_dataset, na.action=na.omit))
-models2 <- map(cv$train, ~lm(AMT_INCOME_TOTAL ~ ., data=normalized_dataset, na.action=na.omit))
-pred1  <- map2_df(models1, cv$test, get_pred, .id = "Run")
-pred2  <- map2_df(models2, cv$test, get_pred, .id = "Run")
+  
+  cv  <- crossv_kfold(transformed_data_df[test], k = k)
+  cvn  <- crossv_kfold(normalized_dataset[test], k = k)
 
-MSE1  <- pred1 %>% group_by(Run) %>%
-  summarise(MSE = mean( (log(AMT_INCOME_TOTAL) - pred)^2))
-print(MSE1)
+  models1 <- map(cv$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data_df[test]))
+  models2 <- map(cv$train, ~lm(AMT_INCOME_TOTAL ~ ., data=transformed_data_df[test]))
 
-MSE2  <- pred2 %>% group_by(Run) %>%
-  summarise(MSE = mean( (log(AMT_INCOME_TOTAL) - pred)^2))
-print(MSE2)
+  modelsn1 <- map(cvn$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=normalized_dataset[test]))
+  modelsn2 <- map(cvn$train, ~lm(AMT_INCOME_TOTAL ~ ., data=normalized_dataset[test]))
+
+  pred1  <- map2_df(models1, cv$test, get_pred, .id = "Run1")
+  pred2  <- map2_df(models2, cv$test, get_pred, .id = "Run2")
+  
+  predn1  <- map2_df(modelsn1, cvn$test, get_pred, .id = "Run1")
+  predn2  <- map2_df(modelsn2, cvn$test, get_pred, .id = "Run2")
+
+  MSE1  <- pred1 %>% group_by(Run1) %>%
+    summarise(MSE = mean( (log(AMT_INCOME_TOTAL) - pred)^2))
+  print(MSE1)
+  print(MSE1 / mean(log(AMT_INCOME_TOTAL)))
+
+  MSE2  <- pred2 %>% group_by(Run2) %>%
+    summarise(MSE = mean( (AMT_INCOME_TOTAL - pred)^2))
+  print(MSE2)
+  print(MSE2 / mean(AMT_INCOME_TOTAL))
+
+  MSEn1  <- predn1 %>% group_by(Run1) %>%
+    summarise(MSE = mean( (log(AMT_INCOME_TOTAL) - pred)^2))
+  print(MSEn1)
+  print(MSEn1 / mean(log(AMT_INCOME_TOTAL)))
+
+  MSEn2  <- predn2 %>% group_by(Run2) %>%
+    summarise(MSE = mean( (AMT_INCOME_TOTAL - pred)^2))
+  print(MSEn2)
+  print(MSEn2 / mean(AMT_INCOME_TOTAL))
 }
+
+
+x = data.matrix(total_data[,!names(total_data) %in% c("AMT_INCOME_TOTAL")])
+y = total_data$AMT_INCOME_TOTAL
+
+
+x = data.matrix(transformed_data_df[,!names(transformed_data_df) %in% c("AMT_INCOME_TOTAL")])
+y = log(transformed_data_df$AMT_INCOME_TOTAL)
+
+
+x = data.matrix(transformed_data_df[,test])
+y = log(transformed_data_df$AMT_INCOME_TOTAL)
+
+x = data.matrix(normalized_dataset)
+y = log(transformed_data_df$AMT_INCOME_TOTAL)
+
+library(glmnet)
+
+cv_model <- cv.glmnet(x, y, alpha=1)
+
+best_lambda <- cv_model$lambda.min
+best_lambda
+
+#produce plot of test MSE by lambda value
+plot(cv_model) 
+
+best_model <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+coef(best_model)
+
+#use fitted best model to make predictions
+y_predicted <- predict(best_model, s = best_lambda, newx = x)
+
+#find SST and SSE
+sst <- sum((y - mean(y))^2)
+sse <- sum((y_predicted - y)^2)
+
+#find R-Squared
+rsq <- 1 - sse/sst
+rsq
+
+
+
+res_aov <- aov(AMT_INCOME_TOTAL ~ CODE_GENDER + OCCUPATION_TYPE + CODE_GENDER:OCCUPATION_TYPE, data = transformed_data_df)
+summary(res_aov)
+qqnorm(residuals(res_aov))
+qqline(residuals(res_aov))
+shapiro.test(sample(residuals(res_aov), 5000))
