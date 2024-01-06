@@ -2,13 +2,13 @@ Research Project – Mathematical Statistics
 Calda Lorenzo, Senel Ali Emre
 January 2024
 
-## Introduction:
+# Introduction:
 Accurately assessing a person's earning capabilities is invaluable in the financial landscape, benefiting private financial institutions by enhancing client profiling and aiding revenue agencies in 
 identifying discrepancies between declared and actual earnings. In this paper we seek to investigate the relationship between the total monthly income and the financial and demographic data of a person; 
 with the final aim of finding key factors which can be used to model the total income of an individual. Acknowledging the complexity of this analysis, we recognize that our study may not fully encapsulate 
 all determinants, but we hope our statistical analysis will provide useful insights.
 
-## Dataset:
+# Dataset:
 Given the sensitive subject of our analysis, finding a suitable dataset proved to be challenging. Ultimately, we chose to utilize the Home Credit Group Kaggle competition dataset on loan default prediction 
 and adapted it to our needs [insert links to both competition and where we got the data]. We recognize that using a dataset originally intended for a different purpose may introduce biases, and we will 
 address this concern in subsequent discussions. Originally, the dataset contained over 122 columns providing information about customers and their loan repayment abilities. Our modifications, detailed below, 
