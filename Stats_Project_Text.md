@@ -26,5 +26,5 @@ function called transformations() that, for each continuous feature in the datas
 and cube root. The logarithm, the inverse and the inverse squared were adjusted to be able to satisfy the domain requirements of some of the features, for example the logarithm results in the transformation 
 log(x+1). These transformations expanded the feature set to 493, encompassing multiple orders of magnitude. However, this diversity might impact our plan to perform feature selection using LASSO penalization, as features would be weighted differently. To mitigate this, we standardized the data by subtracting the mean from each column and dividing by the standard deviation. This ensures a consistent scale across features, addressing potential issues in the LASSO penalty application.
 
-### Preliminary Data Exploration:
+# Preliminary Data Exploration:
 
