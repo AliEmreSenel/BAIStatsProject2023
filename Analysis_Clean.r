@@ -11,37 +11,6 @@ dataset$YEARS_EMPLOYED <- -dataset$DAYS_EMPLOYED/365
 dataset$DAYS_EMPLOYED <- NULL
 for (feature_name in categorical_features) {
   dataset[[feature_name]] <- factor(dataset[[feature_name]])
-}
-
-par(mfrow = c(2, 4))
-boxplot(log(AMT_INCOME_TOTAL) ~ CODE_GENDER, data = dataset)
-boxplot(log(AMT_INCOME_TOTAL) ~ CNT_CHILDREN, data = dataset)
-boxplot(log(AMT_INCOME_TOTAL) ~ NAME_INCOME_TYPE, data = dataset)
-
-par(mar = c(7, 4, 2, 2) + 1) #add room for the rotated labels
-boxplot(log(AMT_INCOME_TOTAL) ~ NAME_EDUCATION_TYPE, 
-        ylab = "log(AMT_INCOME_TOTAL)",
-        data = dataset, xaxt = "n", xlab = "")
-axis(1, at=1:5, labels = FALSE)
-text(1.1:5.1, par("usr")[3] - 0.35, labels = levels(dataset$NAME_EDUCATION_TYPE), srt = 25, pos = 2,adj = 1, xpd = TRUE,)
-
-par(mar = c(7, 4, 2, 2) + 1) #add room for the rotated labels
-boxplot(log(AMT_INCOME_TOTAL) ~ OCCUPATION_TYPE, 
-        ylab = "log(AMT_INCOME_TOTAL)",
-        data = dataset, xaxt = "n", xlab = "")
-axis(1, at=1:18, labels = FALSE)
-text(1.5:18.5, par("usr")[3] - 0.35, labels = levels(dataset$OCCUPATION_TYPE), srt = 45, pos = 2, xpd = TRUE)
-
-dev.off()
-
-plot(log(AMT_INCOME_TOTAL) ~ OWN_CAR_AGE, data = dataset)
-plot(log(AMT_INCOME_TOTAL) ~ YEARS_BIRTH, data = dataset)
-plot(log(AMT_INCOME_TOTAL) ~ YEARS_EMPLOYED, data = dataset)
-
-round(prop.table(table(CODE_GENDER, NAME_EDUCATION_TYPE)) * 100, digits = 2)
-round(prop.table(table(NAME_EDUCATION_TYPE, OCCUPATION_TYPE)) * 100, digits = 2)
-
-dev.off()
 
 # Transform dataset:
 transformations <- function(dataset) {
@@ -113,10 +82,35 @@ correlation_vector <- cor(standardized_data[setdiff(names(standardized_data), un
 sorted_indices <- order(correlation_vector, decreasing = TRUE)
 sorted_correlation_vector <- cor(standardized_data[setdiff(names(standardized_data), union("AMT_INCOME_TOTAL", categorical_features))][sorted_indices], log(standardized_data[["AMT_INCOME_TOTAL"]]))
 
-plot(standardized_data$REGION_POPULATION_RELATIVE_cubed, log(standardized_data$AMT_INCOME_TOTAL))
-plot(standardized_data$FLOORSMAX_AVG_exp, log(standardized_data$AMT_INCOME_TOTAL))
-plot(standardized_data$FLOORSMAX_MEDI_exp, log(standardized_data$AMT_INCOME_TOTAL))
+par(mfrow = c(2, 4))
+boxplot(log(AMT_INCOME_TOTAL) ~ CODE_GENDER, data = dataset)
+boxplot(log(AMT_INCOME_TOTAL) ~ CNT_CHILDREN, data = dataset)
+boxplot(log(AMT_INCOME_TOTAL) ~ NAME_INCOME_TYPE, data = dataset)
 
+par(mar = c(7, 4, 2, 2) + 1) #add room for the rotated labels
+boxplot(log(AMT_INCOME_TOTAL) ~ NAME_EDUCATION_TYPE, 
+        ylab = "log(AMT_INCOME_TOTAL)",
+        data = dataset, xaxt = "n", xlab = "")
+axis(1, at=1:5, labels = FALSE)
+text(1.1:5.1, par("usr")[3] - 0.35, labels = levels(dataset$NAME_EDUCATION_TYPE), srt = 25, pos = 2,adj = 1, xpd = TRUE,)
+
+par(mar = c(7, 4, 2, 2) + 1) #add room for the rotated labels
+boxplot(log(AMT_INCOME_TOTAL) ~ OCCUPATION_TYPE, 
+        ylab = "log(AMT_INCOME_TOTAL)",
+        data = dataset, xaxt = "n", xlab = "")
+axis(1, at=1:18, labels = FALSE)
+text(1.5:18.5, par("usr")[3] - 0.35, labels = levels(dataset$OCCUPATION_TYPE), srt = 45, pos = 2, xpd = TRUE)
+
+dev.off()
+
+plot(log(AMT_INCOME_TOTAL) ~ OWN_CAR_AGE, data = dataset)
+plot(log(AMT_INCOME_TOTAL) ~ YEARS_BIRTH, data = dataset)
+plot(log(AMT_INCOME_TOTAL) ~ YEARS_EMPLOYED, data = dataset)
+
+round(prop.table(table(CODE_GENDER, NAME_EDUCATION_TYPE)) * 100, digits = 2)
+round(prop.table(table(NAME_EDUCATION_TYPE, OCCUPATION_TYPE)) * 100, digits = 2)
+
+dev.off()
 
       
 # Starting Linear model:
@@ -463,7 +457,7 @@ best_coef <- coef(best_model)
 best_coef
 
 #use fitted best model to make predictions
-y_predicted <- predict(best_model, s = best_lambda, newx = x)
+y_predicted <- predict(best_model, s = best_lambda, newx = data.matrix(x))
 
 #find SST and SSE
 sst <- sum((y - mean(y))^2)
