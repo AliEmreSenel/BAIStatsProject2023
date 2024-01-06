@@ -164,6 +164,7 @@ step_up <- function(dataset) {
 }
 step_up_model_1 <- step_up(standardized_data)
 
+# The result of running the algo coincides with this list 
 step_up_model_1 <- c("REGION_RATING_CLIENT_W_CITY",
                     "CODE_GENDER",
                     "EXT_SOURCE_1_exp",
@@ -228,6 +229,7 @@ step_down <- function(dataset) {
 }
 step_down_model_1 <- step_down(standardized_data)
 
+#  The result of running the algo coincides with this list 
 step_down_model_1 <- c(
   "CODE_GENDER",
   "CNT_CHILDREN",
