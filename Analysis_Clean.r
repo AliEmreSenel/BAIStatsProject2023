@@ -68,6 +68,26 @@ standardize_dataset <- function(dataset) {
 standardized_data <- standardize_dataset(transformed_data)
 
 
+# Visual exploration of the dataset:
+hist(standardized_data$AMT_INCOME_TOTAL)
+hist(log(standardized_data$AMT_INCOME_TOTAL), freq=FALSE, ylim=c(0, 0.85))
+curve(dnorm(x, mean = mean(log(standardized_data$AMT_INCOME_TOTAL)), sd = sd(log(standardized_data$AMT_INCOME_TOTAL))), add = TRUE, col = "red")
+ks.test(log(standardized_data$AMT_INCOME_TOTAL), "pnorm", mean = mean(log(standardized_data$AMT_INCOME_TOTAL)), sd = sd(log(standardized_data$AMT_INCOME_TOTAL)))
+shapiro.test(sample(log(standardized_data$AMT_INCOME_TOTAL), 5000))
+qqnorm(log(standardized_data$AMT_INCOME_TOTAL))
+qqline(log(standardized_data$AMT_INCOME_TOTAL))
+
+
+correlation_vector <- cor(standardized_data[setdiff(names(standardized_data), union("AMT_INCOME_TOTAL", categorical_features))], log(standardized_data[["AMT_INCOME_TOTAL"]]))
+sorted_indices <- order(correlation_vector, decreasing = TRUE)
+sorted_correlation_vector <- cor(standardized_data[setdiff(names(standardized_data), union("AMT_INCOME_TOTAL", categorical_features))][sorted_indices], log(standardized_data[["AMT_INCOME_TOTAL"]]))
+
+plot(standardized_data$REGION_POPULATION_RELATIVE_cubed, log(standardized_data$AMT_INCOME_TOTAL))
+plot(standardized_data$FLOORSMAX_AVG_exp, log(standardized_data$AMT_INCOME_TOTAL))
+plot(standardized_data$FLOORSMAX_MEDI_exp, log(standardized_data$AMT_INCOME_TOTAL))
+
+
+      
 # Starting Linear model:
 original_lm = lm(dataset$AMT_INCOME_TOTAL ~ ., data = standardized_data)
 summary(original_lm) # R^2 adjusted = 0.2737
