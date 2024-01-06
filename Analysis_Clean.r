@@ -71,9 +71,11 @@ standardized_data <- standardize_dataset(transformed_data)
 # Visual exploration of the dataset:
 hist(standardized_data$AMT_INCOME_TOTAL)
 hist(log(standardized_data$AMT_INCOME_TOTAL), freq=FALSE, ylim=c(0, 0.85))
-curve(dnorm(x, mean = mean(log(standardized_data$AMT_INCOME_TOTAL)), sd = sd(log(standardized_data$AMT_INCOME_TOTAL))), add = TRUE, col = "red")
+curve(dnorm(x, mean = mean(log(standardized_data$AMT_INCOME_TOTAL)), sd = sd(log(standardized_data$AMT_INCOME_TOTAL))), add = TRUE, col = "blue")
 ks.test(log(standardized_data$AMT_INCOME_TOTAL), "pnorm", mean = mean(log(standardized_data$AMT_INCOME_TOTAL)), sd = sd(log(standardized_data$AMT_INCOME_TOTAL)))
 shapiro.test(sample(log(standardized_data$AMT_INCOME_TOTAL), 5000))
+library(nortest)
+lillie.test(log(standardized_data$AMT_INCOME_TOTAL))
 qqnorm(log(standardized_data$AMT_INCOME_TOTAL))
 qqline(log(standardized_data$AMT_INCOME_TOTAL))
 
