@@ -13,6 +13,35 @@ for (feature_name in categorical_features) {
   dataset[[feature_name]] <- factor(dataset[[feature_name]])
 }
 
+par(mfrow = c(2, 4))
+boxplot(log(AMT_INCOME_TOTAL) ~ CODE_GENDER, data = dataset)
+boxplot(log(AMT_INCOME_TOTAL) ~ CNT_CHILDREN, data = dataset)
+boxplot(log(AMT_INCOME_TOTAL) ~ NAME_INCOME_TYPE, data = dataset)
+
+par(mar = c(7, 4, 2, 2) + 1) #add room for the rotated labels
+boxplot(log(AMT_INCOME_TOTAL) ~ NAME_EDUCATION_TYPE, 
+        ylab = "log(AMT_INCOME_TOTAL) ~ NAME_EDUCATION_TYPE",
+        data = dataset, xaxt = "n", xlab = "")
+axis(1, at=1:5, labels = FALSE)
+text(1.1:5.1, par("usr")[3] - 0.35, labels = levels(dataset$NAME_EDUCATION_TYPE), srt = 25, pos = 2,adj = 1, xpd = TRUE,)
+
+par(mar = c(7, 4, 2, 2) + 1) #add room for the rotated labels
+boxplot(log(AMT_INCOME_TOTAL) ~ OCCUPATION_TYPE, 
+        ylab = "log(AMT_INCOME_TOTAL) ~ NAME_EDUCATION_TYPE",
+        data = dataset, xaxt = "n", xlab = "")
+axis(1, at=1:18, labels = FALSE)
+text(1.5:18.5, par("usr")[3] - 0.35, labels = levels(dataset$OCCUPATION_TYPE), srt = 45, pos = 2, xpd = TRUE)
+
+dev.off()
+
+plot(log(AMT_INCOME_TOTAL) ~ OWN_CAR_AGE, data = dataset)
+plot(log(AMT_INCOME_TOTAL) ~ YEARS_BIRTH, data = dataset)
+plot(log(AMT_INCOME_TOTAL) ~ YEARS_EMPLOYED, data = dataset)
+
+round(prop.table(table(CODE_GENDER, NAME_EDUCATION_TYPE)) * 100, digits = 2)
+round(prop.table(table(NAME_EDUCATION_TYPE, OCCUPATION_TYPE)) * 100, digits = 2)
+
+dev.off()
 
 # Transform dataset:
 transformations <- function(dataset) {
@@ -414,105 +443,14 @@ summary(lm)
 res_aov <- aov(AMT_INCOME_TOTAL ~ CODE_GENDER + OCCUPATION_TYPE + CODE_GENDER:OCCUPATION_TYPE, data = standardized_data)
 summary(res_aov)
 
-# MODEL TRAINING & CROSS VALIDATION
-library(modelr)
-library(purrr)
-library(tidyverse)
-library(plyr)
-
-
-get_pred  <- function(model, test_data){
-  data  <- as.data.frame(test_data)
-  pred  <- add_predictions(data, model)
-  return(pred)
-}
-
-calc_MSE <- function(pred, target){
-  MSE  <- pred %>% group_by(Run) %>%
-    summarise(MSE = mean( (target - pred)^2))
-  return(MSE / mean(target))
-}
-
-calc_standardized_MSE <- function(pred, target){
-  return(calc_MSE(pred, target) / mean(target))
-}
-
-for (k in 2:10) {
-  print(k)
-  
-  cv_step_down  <- crossv_kfold(transformed_data[step_down_model_1], k = k)
-  cv_step_up <- crossv_kfold(transformed_data[step_up_model_1], k = k)
-  cv_all  <- crossv_kfold(transformed_data, k = k)
-  
-  cv_standardized_step_down  <- crossv_kfold(standardized_data[step_down_model_1], k = k)
-  cv_standardized_step_up  <- crossv_kfold(standardized_data[step_up_model_1], k = k)
-  cv_standardized_all  <- crossv_kfold(standardized_data, k = k)
-
-  
-#  model_step_down <- map(cv_step_down$train, ~lm(AMT_INCOME_TOTAL ~ ., data=transformed_data[step_down_model_1]))
-#  model_step_up <- map(cv_step_up$train, ~lm(AMT_INCOME_TOTAL ~ ., data=transformed_data[step_up_model_1]))
-#  model_all <- map(cv_all$train, ~lm(AMT_INCOME_TOTAL ~ ., data=transformed_data))
-  model_step_down_log <- map(cv_step_down$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data[step_down_model_1]))
-  model_step_up_log <- map(cv_step_up$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data[step_up_model_1]))
-  model_all_log <- map(cv_all$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=transformed_data))
-  
-#  model_standardized_step_down <- map(cv_standardized_step_down$train, ~lm(AMT_INCOME_TOTAL ~ ., data=standardized_data[step_down_model_1]))
-#  model_standardized_step_up <- map(cv_standardized_step_up$train, ~lm(AMT_INCOME_TOTAL ~ ., data=standardized_data[step_up_model_1]))
-#  model_standardized_all <- map(cv_standardized_all$train, ~lm(AMT_INCOME_TOTAL ~ ., data=standardized_data))
-  model_standardized_step_down_log <- map(cv_standardized_step_down$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_down_model_1]))
-  model_standardized_step_up_log <- map(cv_standardized_step_up$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_up_model_1]))
-  model_standardized_all_log <- map(cv_standardized_all$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data))
-  
-  
-#  pred_step_down  <- map2_df(model_step_down, cv_step_down$test, get_pred, .id = "Run")
-#  pred_step_up  <- map2_df(model_step_up, cv_step_up$test, get_pred, .id = "Run")
-#  pred_all  <- map2_df(model_all, cv_all$test, get_pred, .id = "Run")
-  pred_step_down_log  <- map2_df(model_step_down_log, cv_step_down$test, get_pred, .id = "Run")
-  pred_step_up_log  <- map2_df(model_step_up_log, cv_step_up$test, get_pred, .id = "Run")
-  pred_all_log  <- map2_df(model_all_log, cv_all$test, get_pred, .id = "Run")
-  
-#  pred_standardized_step_down  <- map2_df(model_standardized_step_down, cv_standardized_step_down$test, get_pred, .id = "Run")
-#  pred_standardized_step_up  <- map2_df(model_standardized_step_up, cv_standardized_step_up$test, get_pred, .id = "Run")
-#  pred_standardized_all  <- map2_df(model_standardized_all, cv_standardized_all$test, get_pred, .id = "Run")
-  pred_standardized_step_down_log  <- map2_df(model_standardized_step_down_log, cv_standardized_step_down$test, get_pred, .id = "Run")
-  pred_standardized_step_up_log  <- map2_df(model_standardized_step_up_log, cv_standardized_step_up$test, get_pred, .id = "Run")
-  pred_standardized_all_log  <- map2_df(model_standardized_all_log, cv_standardized_all$test, get_pred, .id = "Run")
-  
-  
-#  print(calc_MSE(pred_step_down, AMT_INCOME_TOTAL))
-#  print(calc_standardized_MSE(pred_step_down, AMT_INCOME_TOTAL))
-#  print(calc_MSE(pred_step_up, AMT_INCOME_TOTAL))
-#  print(calc_standardized_MSE(pred_step_up, AMT_INCOME_TOTAL))
-#  print(calc_MSE(pred_all, AMT_INCOME_TOTAL))
-#  print(calc_standardized_MSE(pred_all, AMT_INCOME_TOTAL))
-#  print(calc_MSE(pred_step_down_log, log(AMT_INCOME_TOTAL)))
-  print(calc_standardized_MSE(pred_step_down_log, log(AMT_INCOME_TOTAL)))
-#  print(calc_MSE(pred_step_up_log, log(AMT_INCOME_TOTAL)))
-  print(calc_standardized_MSE(pred_step_up_log, log(AMT_INCOME_TOTAL)))
-#  print(calc_MSE(pred_all_log, log(AMT_INCOME_TOTAL)))
-  print(calc_standardized_MSE(pred_all_log, log(AMT_INCOME_TOTAL)))
-  
-#  print(calc_MSE(pred_standardized_step_down, AMT_INCOME_TOTAL))
-#  print(calc_standardized_MSE(pred_standardized_step_down, AMT_INCOME_TOTAL))
-#  print(calc_MSE(pred_standardized_step_up, AMT_INCOME_TOTAL))
-#  print(calc_standardized_MSE(pred_standardized_step_up, AMT_INCOME_TOTAL))
-#  print(calc_MSE(pred_standardized_all, AMT_INCOME_TOTAL))
-#  print(calc_standardized_MSE(pred_standardized_all, AMT_INCOME_TOTAL))
-#  print(calc_MSE(pred_standardized_step_down_log, log(AMT_INCOME_TOTAL)))
-  print(calc_standardized_MSE(pred_standardized_step_down_log, log(AMT_INCOME_TOTAL)))
-#  print(calc_MSE(pred_standardized_step_up_log, log(AMT_INCOME_TOTAL)))
-  print(calc_standardized_MSE(pred_standardized_step_up_log, log(AMT_INCOME_TOTAL)))
-#  print(calc_MSE(pred_standardized_all_log, log(AMT_INCOME_TOTAL)))
-  print(calc_standardized_MSE(pred_standardized_all_log, log(AMT_INCOME_TOTAL)))
-}
 
 # LASSO Model
 library(glmnet)
 
-x = data.matrix(standardized_data[,!names(standardized_data) %in% c("AMT_INCOME_TOTAL")])
+x = standardized_data[,!names(standardized_data) %in% c("AMT_INCOME_TOTAL")]
 y = log(standardized_data$AMT_INCOME_TOTAL)
 
-cv_model <- cv.glmnet(x, y, alpha=1)
+cv_model <- cv.glmnet(data.matrix(x), y, alpha=1)
 
 best_lambda <- cv_model$lambda.min
 best_lambda
@@ -541,4 +479,85 @@ k <- sum(best_coef != 0)  # Number of predictors with non-zero coefficients
 
 adjusted_rsq <- 1 - ((1 - rsq) * (n - 1)) / (n - k - 1)
 adjusted_rsq
+
+namelist <- names(standardized_data)
+lasso_model <- namelist[(best_coef != 0)[,1]]
+
+lasso_model_lm <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=standardized_data[lasso_model])
+summary(lasso_model_lm)
+
+# MODEL TRAINING & CROSS VALIDATION
+library(modelr)
+library(purrr)
+library(tidyverse)
+library(plyr)
+
+
+get_pred  <- function(model, test_data){
+  data  <- as.data.frame(test_data)
+  pred  <- add_predictions(data, model)
+  return(pred)
+}
+
+calc_MSE <- function(pred, target){
+  MSE  <- pred %>% group_by(Run) %>%
+    summarise(MSE = mean( (target - pred)^2))
+  return(MSE)
+}
+
+calc_standardized_MSE <- function(pred, target){
+  return(calc_MSE(pred, target) / mean(target))
+}
+
+
+mse_standardized_step_down_log <- c()
+mse_standardized_step_up_log <- c()
+mse_standardized_lasso_log <- c()
+k_values <- c()
+
+for (k in 2:50) {
+  print(k)
+  
+#  cv_step_down  <- crossv_kfold(transformed_data[step_down_model_1], k = k)
+#  cv_step_up <- crossv_kfold(transformed_data[step_up_model_1], k = k)
+#  cv_all  <- crossv_kfold(transformed_data, k = k)
+  
+  cv_standardized_step_down  <- crossv_kfold(standardized_data[step_down_model_1], k = k)
+  cv_standardized_step_up  <- crossv_kfold(standardized_data[step_up_model_1], k = k)
+  cv_standardized_lasso  <- crossv_kfold(standardized_data[lasso_model], k = k)
+  
+  model_standardized_step_down_log <- map(cv_standardized_step_down$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_down_model_1]))
+  model_standardized_step_up_log <- map(cv_standardized_step_up$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_up_model_1]))
+  model_standardized_lasso_log <- map(cv_standardized_lasso$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[lasso_model]))
+  
+  pred_standardized_step_down_log  <- map2_df(model_standardized_step_down_log, cv_standardized_step_down$test, get_pred, .id = "Run")
+  pred_standardized_step_up_log  <- map2_df(model_standardized_step_up_log, cv_standardized_step_up$test, get_pred, .id = "Run")
+  pred_standardized_lasso_log  <- map2_df(model_standardized_lasso_log, cv_standardized_lasso$test, get_pred, .id = "Run")
+  
+  print(calc_standardized_MSE(pred_standardized_step_down_log, log(AMT_INCOME_TOTAL)))
+  print(calc_standardized_MSE(pred_standardized_step_up_log, log(AMT_INCOME_TOTAL)))
+  print(calc_standardized_MSE(pred_standardized_lasso_log, log(AMT_INCOME_TOTAL)))
+
+  # Calculate and store MSE values for each k
+  mse_standardized_step_down_log <- c(mse_standardized_step_down_log, calc_standardized_MSE(pred_standardized_step_down_log, log(AMT_INCOME_TOTAL)))
+  mse_standardized_step_up_log <- c(mse_standardized_step_up_log, calc_standardized_MSE(pred_standardized_step_up_log, log(AMT_INCOME_TOTAL)))
+  mse_standardized_lasso_log <- c(mse_standardized_lasso_log, calc_standardized_MSE(pred_standardized_lasso_log, log(AMT_INCOME_TOTAL)))
+  k_values <- c(k_values, k)
+}
+
+fit_step_down <- lm(unlist(mse_standardized_step_down_log) ~ k_values)
+fit_step_up <- lm(unlist(mse_standardized_step_up_log) ~ k_values)
+fit_lasso <- lm(unlist(mse_standardized_lasso_log) ~ k_values)
+
+plot(k_values, mse_standardized_step_down_log, type = "b", col = "green", xlab = "k values", ylab = "MSE", main = "MSE vs k", ylim = c(0.0243, 0.0258))
+points(k_values, mse_standardized_step_up_log, type = "b", col = "yellow")
+points(k_values, mse_standardized_lasso_log, type = "b", col = "orange")
+
+abline(fit_step_down, col = "green")
+abline(fit_step_up, col = "yellow")
+abline(fit_lasso, col = "orange")
+
+legend("topright", legend = c("Standardized Step Down Log", "Standardized Step Up Log", "Standardized Lasso Log"), 
+       col = c("green", "Yellow", "orange"), lty = 1, cex = 0.8)
+
 
