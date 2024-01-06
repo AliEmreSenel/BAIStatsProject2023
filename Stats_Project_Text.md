@@ -10,7 +10,7 @@ all determinants, but we hope our statistical analysis will provide useful insig
 
 # Dataset:
 Given the sensitive subject of our analysis, finding a suitable dataset proved to be challenging. Ultimately, we chose to utilize the Home Credit Group Kaggle competition dataset on loan default prediction 
-and adapted it to our needs [insert links to both competition and where we got the data]. We recognize that using a dataset originally intended for a different purpose may introduce biases, and we will 
+and adapted it to our needs **[insert links to both competition and where we got the data]**. We recognize that using a dataset originally intended for a different purpose may introduce biases, and we will 
 address this concern in subsequent discussions. Originally, the dataset contained over 122 columns providing information about customers and their loan repayment abilities. Our modifications, detailed below, 
 resulted in a dataset comprising 8602 data points, 69 features, and the target variable AMT_TOTAL_INCOME. A description of the features is available at “columns_description.csv” which has been included 
 along with the dataset.
