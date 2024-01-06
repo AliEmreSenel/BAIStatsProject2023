@@ -20,14 +20,14 @@ boxplot(log(AMT_INCOME_TOTAL) ~ NAME_INCOME_TYPE, data = dataset)
 
 par(mar = c(7, 4, 2, 2) + 1) #add room for the rotated labels
 boxplot(log(AMT_INCOME_TOTAL) ~ NAME_EDUCATION_TYPE, 
-        ylab = "log(AMT_INCOME_TOTAL) ~ NAME_EDUCATION_TYPE",
+        ylab = "log(AMT_INCOME_TOTAL)",
         data = dataset, xaxt = "n", xlab = "")
 axis(1, at=1:5, labels = FALSE)
 text(1.1:5.1, par("usr")[3] - 0.35, labels = levels(dataset$NAME_EDUCATION_TYPE), srt = 25, pos = 2,adj = 1, xpd = TRUE,)
 
 par(mar = c(7, 4, 2, 2) + 1) #add room for the rotated labels
 boxplot(log(AMT_INCOME_TOTAL) ~ OCCUPATION_TYPE, 
-        ylab = "log(AMT_INCOME_TOTAL) ~ NAME_EDUCATION_TYPE",
+        ylab = "log(AMT_INCOME_TOTAL)",
         data = dataset, xaxt = "n", xlab = "")
 axis(1, at=1:18, labels = FALSE)
 text(1.5:18.5, par("usr")[3] - 0.35, labels = levels(dataset$OCCUPATION_TYPE), srt = 45, pos = 2, xpd = TRUE)
@@ -560,4 +560,29 @@ abline(fit_lasso, col = "orange")
 legend("topright", legend = c("Standardized Step Down Log", "Standardized Step Up Log", "Standardized Lasso Log"), 
        col = c("green", "Yellow", "orange"), lty = 1, cex = 0.8)
 
+# Draw Predicted/Observed Graph
+k = 10
+cv_standardized_step_down  <- crossv_kfold(standardized_data[step_down_model_1], k = k)
+cv_standardized_step_up  <- crossv_kfold(standardized_data[step_up_model_1], k = k)
+cv_standardized_lasso  <- crossv_kfold(standardized_data[lasso_model], k = k)
 
+model_standardized_step_down_log <- map(cv_standardized_step_down$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_down_model_1]))
+model_standardized_step_up_log <- map(cv_standardized_step_up$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_up_model_1]))
+model_standardized_lasso_log <- map(cv_standardized_lasso$train, ~lm(log(AMT_INCOME_TOTAL) ~ ., data=standardized_data[lasso_model]))
+
+pred_standardized_step_down_log  <- map2_df(model_standardized_step_down_log, cv_standardized_step_down$test, get_pred, .id = "Run")
+pred_standardized_step_up_log  <- map2_df(model_standardized_step_up_log, cv_standardized_step_up$test, get_pred, .id = "Run")
+pred_standardized_lasso_log  <- map2_df(model_standardized_lasso_log, cv_standardized_lasso$test, get_pred, .id = "Run")
+
+all_rows <- data.frame(log(AMT_INCOME_TOTAL), pred_standardized_step_down_log$pred, pred_standardized_step_up_log$pred, pred_standardized_lasso_log$pred)
+
+draw_sample <- sample_n(all_rows, 200)
+
+plot(draw_sample$pred_standardized_step_down_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "green", xlab = "observed", ylab = "predicted", main = "Observed/Predicted for k=10")
+points(draw_sample$pred_standardized_step_up_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "yellow")
+points(draw_sample$pred_standardized_lasso_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "orange")
+
+abline(0, 1, col = "red")
+
+legend("topright", legend = c("Step Down", "Step Up", "Lasso"), 
+       col = c("green", "yellow", "orange"), lty = 1, cex = 0.8)
