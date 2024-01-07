@@ -434,6 +434,9 @@ test$GROUPING <- NULL
 lm = lm(log(test$AMT_INCOME_TOTAL) ~ ., data = test)
 summary(lm)
 
+# Restore Dataset
+standardized_data <- standardize_dataset(transformed_data)
+
 
 # HYPOTHESIS TESTING, DOES GENDER AND JOB TYPE AFFECT TOTAL INCOME? (ANOVA TIME)
 res_aov <- aov(AMT_INCOME_TOTAL ~ CODE_GENDER + OCCUPATION_TYPE + CODE_GENDER:OCCUPATION_TYPE, data = standardized_data)
@@ -577,6 +580,16 @@ draw_sample <- sample_n(all_rows, 200)
 plot(draw_sample$pred_standardized_step_down_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "green", xlab = "observed", ylab = "predicted", main = "Observed/Predicted for k=10")
 points(draw_sample$pred_standardized_step_up_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "yellow")
 points(draw_sample$pred_standardized_lasso_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "orange")
+
+abline(0, 1, col = "red")
+
+legend("topright", legend = c("Step Down", "Step Up", "Lasso"), 
+       col = c("green", "yellow", "orange"), lty = 1, cex = 0.8)
+
+
+plot(exp(draw_sample$pred_standardized_step_down_log.pred) ~ exp(draw_sample$log.AMT_INCOME_TOTAL.) , col = "green", xlab = "observed", ylab = "predicted", main = "Observed/Predicted for k=10")
+points(exp(draw_sample$pred_standardized_step_up_log.pred) ~ exp(draw_sample$log.AMT_INCOME_TOTAL.) , col = "yellow")
+points(exp(draw_sample$pred_standardized_lasso_log.pred) ~ exp(draw_sample$log.AMT_INCOME_TOTAL.) , col = "orange")
 
 abline(0, 1, col = "red")
 
