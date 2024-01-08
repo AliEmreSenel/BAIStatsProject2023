@@ -206,6 +206,8 @@ shapiro.test(sample(step_up_model_1_lm$residuals, 5000))
 lillie.test(step_up_model_1_lm$residuals)
 mean(step_up_model_1_lm$residuals)
 
+
+
 # STEP DOWN SELECTION:
 step_down <- function(dataset) {
   important_features <- setdiff(names(dataset), "AMT_INCOME_TOTAL")
@@ -355,7 +357,7 @@ mean(step_down_model_1_lm$residuals)
 
 
 
-# 2. USING STEPAIC:
+# 2. USING STEPAIC: --- OMITTED FROM REPORT
 library(MASS)
 
 full.model <- lm(formula = log(transformed_data$AMT_INCOME_TOTAL) ~ CODE_GENDER +
@@ -384,7 +386,7 @@ step.model <- stepAIC(full.model, direction = c("backward"), trace = TRUE, k = l
 length(summary(step.model)$coefficients)
 summary(step.model)
 
-# FIRST RESULT USING BIC
+# FIRST RESULT USING BIC --- OMITTED FROM REPORT
 #lm(formula = log(transformed_data$AMT_INCOME_TOTAL) ~ CODE_GENDER +
 #    NAME_INCOME_TYPE + NAME_EDUCATION_TYPE + NAME_FAMILY_STATUS +
 #    REGION_POPULATION_RELATIVE_exp + REGION_POPULATION_RELATIVE_squared +
@@ -408,7 +410,7 @@ summary(step.model)
 #    YEARS_BIRTH_cubic_root + YEARS_EMPLOYED_sqrt + YEARS_EMPLOYED_identity,
 #    data = standardized_data[step_down_model_1])
 
-# SECOND RESULT USING BIC (WITH THE PENALTY SQUARED):
+# SECOND RESULT USING BIC (WITH THE PENALTY SQUARED): --- OMITTED FROM REPORT
 #lm(formula = log(transformed_data$AMT_INCOME_TOTAL) ~ CODE_GENDER +
 #    NAME_INCOME_TYPE + NAME_EDUCATION_TYPE + NAME_FAMILY_STATUS +
 #    REGION_POPULATION_RELATIVE_exp + REGION_POPULATION_RELATIVE_squared +
@@ -433,7 +435,7 @@ summary(step.model)
 #    data = standardized_data[step_down_model_1])
 
 
-# DIVISION OF DATASET INTO 4 INCOME LEVELS:
+# DIVISION OF DATASET INTO 4 INCOME LEVELS: --- OMITTED FROM REPORT
 cut_offs <- quantile(log(standardized_data$AMT_INCOME_TOTAL), prob=c(.25,.5,.75), type=1)
 standardized_data$GROUPING <- cut(log(transformed_data$AMT_INCOME_TOTAL), breaks=c(-Inf, cut_offs, Inf), labels=c("1", "2", "3", "4"), include.lowest=TRUE)
 
@@ -498,6 +500,7 @@ adjusted_rsq
 namelist <- names(standardized_data)
 lasso_model <- namelist[(best_coef != 0)[,1]]
 
+# Result of LASSO model
 lasso_model <- c("CODE_GENDER",
                  "FLAG_OWN_REALTY",
                  "NAME_INCOME_TYPE",
@@ -647,6 +650,9 @@ abline(fit_lasso, col = "orange")
 legend("topright", legend = c("Standardized Step Down Log", "Standardized Step Up Log", "Standardized Lasso Log"), 
        col = c("green", "Yellow", "orange"), lty = 1, cex = 0.8)
 
+
+
+
 # Draw Predicted/Observed Graph
 k = 10
 cv_standardized_step_down  <- crossv_kfold(standardized_data[step_down_model_1], k = k)
@@ -683,4 +689,5 @@ abline(0, 1, col = "red")
 
 legend("topright", legend = c("Step Down", "Step Up", "Lasso"), 
        col = c("green", "yellow", "orange"), lty = 1, cex = 0.8)
+
 
