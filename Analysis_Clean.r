@@ -11,6 +11,7 @@ dataset$YEARS_EMPLOYED <- -dataset$DAYS_EMPLOYED/365
 dataset$DAYS_EMPLOYED <- NULL
 for (feature_name in categorical_features) {
   dataset[[feature_name]] <- factor(dataset[[feature_name]])
+}
 
 # Transform dataset:
 transformations <- function(dataset) {
@@ -64,7 +65,6 @@ standardize_dataset <- function(dataset) {
   return(standardized_dataset)
 }
 standardized_data <- standardize_dataset(transformed_data)
-
 
 # Visual exploration of the dataset:
 hist(standardized_data$AMT_INCOME_TOTAL)
@@ -623,3 +623,4 @@ abline(0, 1, col = "red")
 
 legend("topright", legend = c("Step Down", "Step Up", "Lasso"), 
        col = c("green", "yellow", "orange"), lty = 1, cex = 0.8)
+
