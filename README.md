@@ -10,4 +10,4 @@ This process was done in python since it better lends itself to these applicatio
 This folder contains all the plots that have been used in the pdf.
 
 ### 4. Stats_Project.pdf
-This file summarises the studies all of the analyses that were done.
+This file summarises the studies all of the analyses that were done. The source file is Stats_Project.tex
