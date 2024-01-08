@@ -1,2 +1,15 @@
 *.csv
 img/out
+.Rhistory
+Analysis_Clean_bak.r
+*.svg
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.pdf
+*.synctex.gz
+process.R
