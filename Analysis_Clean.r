@@ -67,7 +67,7 @@ standardize_dataset <- function(dataset) {
 standardized_data <- standardize_dataset(transformed_data)
 
 # Visual exploration of the dataset:
-hist(standardized_data$AMT_INCOME_TOTAL)
+hist(standardized_data$AMT_INCOME_TOTAL, main="Histogram of AMT_INCOME_TOTAL", xlabel = "AMT_INCOME_TOTAL")
 hist(log(standardized_data$AMT_INCOME_TOTAL), freq=FALSE, ylim=c(0, 0.85))
 curve(dnorm(x, mean = mean(log(standardized_data$AMT_INCOME_TOTAL)), sd = sd(log(standardized_data$AMT_INCOME_TOTAL))), add = TRUE, col = "blue")
 ks.test(log(standardized_data$AMT_INCOME_TOTAL), "pnorm", mean = mean(log(standardized_data$AMT_INCOME_TOTAL)), sd = sd(log(standardized_data$AMT_INCOME_TOTAL)))
@@ -605,7 +605,7 @@ all_rows <- data.frame(log(AMT_INCOME_TOTAL), pred_standardized_step_down_log$pr
 
 draw_sample <- sample_n(all_rows, 200)
 
-plot(draw_sample$pred_standardized_step_down_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "green", xlab = "observed", ylab = "predicted", main = "Observed/Predicted for k=10")
+plot(draw_sample$pred_standardized_step_down_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "green", xlab = "observed", ylab = "predicted", main = "Log Observed/Predicted for k=10")
 points(draw_sample$pred_standardized_step_up_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "yellow")
 points(draw_sample$pred_standardized_lasso_log.pred ~ draw_sample$log.AMT_INCOME_TOTAL. , col = "orange")
 
