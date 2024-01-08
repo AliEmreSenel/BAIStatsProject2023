@@ -195,7 +195,16 @@ step_up_model_1 <- c("REGION_RATING_CLIENT_W_CITY",
         # Using standardized_data
 step_up_model_1_lm <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_up_model_1], na.action=na.omit)
 summary(step_up_model_1_lm)
-
+hist(step_up_model_1_lm$residuals)
+plot(log(transformed_data$AMT_INCOME_TOTAL), step_up_model_1_lm$residuals)
+abline(lm(step_up_model_1_lm$residuals ~ log(transformed_data$AMT_INCOME_TOTAL)), col = "blue")
+cor(log(transformed_data$AMT_INCOME_TOTAL), step_up_model_1_lm$residuals)
+qqnorm(step_up_model_1_lm$residuals)
+qqline(step_up_model_1_lm$residuals)
+ks.test(step_up_model_1_lm$residuals, "pnorm", mean = mean(step_up_model_1_lm$residuals), sd = sd(step_up_model_1_lm$residuals))
+shapiro.test(sample(step_up_model_1_lm$residuals, 5000))
+lillie.test(step_up_model_1_lm$residuals)
+mean(step_up_model_1_lm$residuals)
 
 # STEP DOWN SELECTION:
 step_down <- function(dataset) {
@@ -329,14 +338,21 @@ step_down_model_1 <- c(
   "YEARS_EMPLOYED_identity"
 )
 
-        # Using transformed_data
-step_down_model_1_lm_1 <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=transformed_data[step_down_model_1])
-summary(step_down_model_1_lm_1)
-plot(log(transformed_data$AMT_INCOME_TOTAL), step_down_model_1_lm_1$residuals)
 
         # Using standardized_data
-step_down_model_1_lm_2 <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_down_model_1])
-summary(step_down_model_1_lm_2)
+step_down_model_1_lm <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=standardized_data[step_down_model_1])
+summary(step_down_model_1_lm)
+hist(step_down_model_1_lm$residuals)
+plot(log(transformed_data$AMT_INCOME_TOTAL), step_down_model_1_lm$residuals)
+abline(lm(step_down_model_1_lm$residuals ~ log(transformed_data$AMT_INCOME_TOTAL)), col = "blue")
+cor(log(transformed_data$AMT_INCOME_TOTAL), step_down_model_1_lm$residuals)
+qqnorm(step_down_model_1_lm$residuals)
+qqline(step_down_model_1_lm$residuals)
+ks.test(step_down_model_1_lm$residuals, "pnorm", mean = mean(step_down_model_1_lm$residuals), sd = sd(step_down_model_1_lm$residuals))
+shapiro.test(sample(step_down_model_1_lm$residuals, 5000))
+lillie.test(step_down_model_1_lm$residuals)
+mean(step_down_model_1_lm$residuals)
+
 
 
 # 2. USING STEPAIC:
@@ -484,7 +500,19 @@ lasso_model <- namelist[(best_coef != 0)[,1]]
 
 lasso_model_lm <- lm(log(transformed_data$AMT_INCOME_TOTAL) ~ ., data=standardized_data[lasso_model])
 summary(lasso_model_lm)
+hist(lasso_model_lm$residuals)
+plot(log(transformed_data$AMT_INCOME_TOTAL), lasso_model_lm$residuals)
+abline(lm(lasso_model_lm$residuals ~ log(transformed_data$AMT_INCOME_TOTAL)), col = "blue")
+cor(log(transformed_data$AMT_INCOME_TOTAL), lasso_model_lm$residuals)
+qqnorm(lasso_model_lm$residuals)
+qqline(lasso_model_lm$residuals)
+ks.test(lasso_model_lm$residuals, "pnorm", mean = mean(lasso_model_lm$residuals), sd = sd(lasso_model_lm$residuals))
+shapiro.test(sample(lasso_model_lm$residuals, 5000))
+lillie.test(lasso_model_lm$residuals)
+mean(lasso_model_lm$residuals)
 
+
+      
 # MODEL TRAINING & CROSS VALIDATION
 library(modelr)
 library(purrr)
