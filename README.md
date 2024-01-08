@@ -10,4 +10,13 @@ This process was done in python since it better lends itself to these applicatio
 This folder contains all the plots that have been used in the pdf.
 
 ### 4. Stats_Project.pdf
-This file summarises the studies all of the analyses that were done. The source file is Stats_Project.tex
+This file summarises the studies all of the analyses that were done. The source file is Stats_Project.tex.
+
+### 5. columns_description.csv
+csv file containing a description of all the columns in application_data.csv.
+
+### 6. application_data.csv
+csv file containg the original dataset.
+
+### 7. application_data_remove_na.csv
+csv file obtained from application_data.csv which was used for the analyses in Analysis_Clean.r.
